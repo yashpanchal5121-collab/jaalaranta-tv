@@ -10,11 +10,17 @@
   .layer { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: #0c1512 no-repeat center center; background-size: contain; opacity: 0;
     -webkit-transition: opacity 700ms ease; transition: opacity 700ms ease; }
   .layer.on { opacity: 1; }
+  /* Display hangs left side up but its browser stays landscape: turn the portrait menu 90° left.
+     Done in CSS so it works even if the browser's script engine is old. */
+  @media (orientation: landscape) {
+    #stage { width: 100vh; height: 100vw; -webkit-transform: translate(0, 100vh) rotate(-90deg); transform: translate(0, 100vh) rotate(-90deg); }
+  }
+  #ver { position: absolute; left: 16px; top: 16px; font: 700 28px/1 sans-serif; color: #c19c58; z-index: 3; }
   #debug { position: absolute; right: 12px; bottom: 12px; padding: 6px 10px; font: 14px/1.3 monospace; color: #c19c58; background: rgba(0,0,0,0.75); display: none; z-index: 2; }
 </style>
 </head>
 <body>
-<div id="stage"><div class="layer" id="a"></div><div class="layer" id="b"></div><div id="debug"></div></div>
+<div id="stage"><div class="layer" id="a"></div><div class="layer" id="b"></div><div id="debug"></div><div id="ver">v3</div></div>
 <script>
 // Jaalaranta TV player. Plain ES5 so it also runs on the display's built-in browser.
 // Picks a playlist from the clock (rules in src/tv.json), shows each screen for its set time,
@@ -52,7 +58,10 @@ function currentPlaylist() {
 var rotate = query.rotate !== undefined ? +query.rotate : null;  // null = automatic
 function fit() {
   var st = document.getElementById('stage').style, w = window.innerWidth, h = window.innerHeight;
-  var t = '', r = rotate === null ? (w > h ? 270 : 0) : rotate;
+  var t = '', r = rotate;
+  if (r === null) {  // automatic: leave it to the CSS rule above
+    st.width = st.height = st.webkitTransform = st.transform = ''; return;
+  }
   if (r === 90) { st.width = h + 'px'; st.height = w + 'px'; t = 'translate(' + w + 'px,0) rotate(90deg)'; }
   else if (r === 270) { st.width = h + 'px'; st.height = w + 'px'; t = 'translate(0,' + h + 'px) rotate(270deg)'; }
   else { st.width = w + 'px'; st.height = h + 'px'; }
@@ -110,6 +119,7 @@ setInterval(function () {
   x.send();
 }, 60000);
 
+setTimeout(function () { var v = document.getElementById('ver'); v.parentNode.removeChild(v); }, 15000);
 step();
 </script>
 </body>
